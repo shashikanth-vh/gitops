@@ -15,4 +15,3 @@ node_templates:
         start:
           implementation: scripts/start.sh
           
-          
