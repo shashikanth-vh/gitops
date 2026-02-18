@@ -1,0 +1,39 @@
+name: Cloudify GitOps Demo
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Deploy to Cloudify
+        env:
+          CFY_MANAGER_URL: ${{ secrets.CFY_MANAGER_URL }}
+          CFY_USERNAME: ${{ secrets.CFY_USERNAME }}
+          CFY_PASSWORD: ${{ secrets.CFY_PASSWORD }}
+          CFY_TENANT: ${{ secrets.CFY_TENANT }}
+          CFY_API_VERSION: v3.1
+          CFY_INSECURE: false
+        run: |
+          python3 scripts/cloudify_deploy.py \
+            --blueprint-id hello-bp \
+            --blueprint-dir blueprints/hello \
+            --application-file blueprint.yaml \
+            --deployment-id hello-dev \
+            --inputs-file inputs/dev.yaml \
+            --workflow install \
+            --wait
