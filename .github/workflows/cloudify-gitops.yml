@@ -7,28 +7,31 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: [self-hosted, macOS]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Use local Python + venv
+        shell: bash
+        run: |
+          python3 --version
+          python3 -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Deploy to Cloudify
+        shell: bash
         env:
           CFY_MANAGER_URL: ${{ secrets.CFY_MANAGER_URL }}
           CFY_USERNAME: ${{ secrets.CFY_USERNAME }}
           CFY_PASSWORD: ${{ secrets.CFY_PASSWORD }}
           CFY_TENANT: ${{ secrets.CFY_TENANT }}
           CFY_API_VERSION: v3.1
-          CFY_INSECURE: false
+          CFY_INSECURE: "false"
         run: |
+          source .venv/bin/activate
           python3 scripts/cloudify_deploy.py \
             --blueprint-id hello-bp \
             --blueprint-dir blueprints/hello \
